@@ -37,7 +37,11 @@ public class Calculator1 {
         isValueInput = true;
     }
 
-    public void setOperation(OPERATION operation) {
+    public void clearResult() {
+        op[0] = 0;
+    }
+
+    public double setOperation(OPERATION operation) throws CalculatorException {
         switch (lastAction) {
             case NO_ACTION:
                 if(isValueInput) {
@@ -76,9 +80,11 @@ public class Calculator1 {
         }
         lastOperation = operation;
         lastAction = OPERATION_ACTION;
+        return op[0];
     }
 
-    public void calculateFunction(FUNCTION f) {
+    public double calculateFunction(FUNCTION f) throws CalculatorException {
+        double result = 0;
         switch (lastAction) {
             case NO_ACTION:
                 if(isValueInput) {
@@ -86,6 +92,7 @@ public class Calculator1 {
                     isValueInput = false;
                 }
                 op[0] = executeFunction(f, op[1], op[0]);
+                result = op[0];
                 break;
             case OPERATION_ACTION:
                 if(isValueInput) {
@@ -95,34 +102,37 @@ public class Calculator1 {
                     op[1] = op[0];
                 }
                 op[1] = executeFunction(f, op[1], op[0]);
+                result = op[1];
                 break;
             case FUNCTION_ACTION:
                 if(isValueInput) {
-                    op[1] = input;
+                    op[0] = executeFunction(f, input, op[0]);
                     isValueInput = false;
                 } else {
-
+                    op[0] = executeFunction(f, op[0], op[0]);
                 }
-                op[1] = executeFunction(f, op[1], op[0]);
+                result = op[0];
                 break;
             case EQUAL_ACTION:
                 if(isValueInput) {
-                    op[0] = input;
+                    op[0] = executeFunction(f, input, op[0]);
                     isValueInput = false;
                 } else {
-
+                    op[0] = executeFunction(f, op[0], op[0]);
                 }
-                op[0] = executeFunction(f, op[0], op[1]);
+                result = op[0];
                 break;
         }
         lastAction = FUNCTION_ACTION;
+        return result;
     }
 
-    public void calculate() {
+    public double calculate() throws CalculatorException {
         switch (lastAction) {
             case NO_ACTION:
                 if(isValueInput) {
                     op[1] = input;
+                    op[0] = input;
                     isValueInput = false;
                 }
                 break;
@@ -155,13 +165,20 @@ public class Calculator1 {
                 break;
         }
         lastAction = EQUAL_ACTION;
+        return op[0];
     }
 
-    public double executeFunction(FUNCTION f, double op1, double op2) {
+    public double executeFunction(FUNCTION f, double op1, double op2) throws CalculatorException {
         switch (f) {
             case SQRT:
+                if(op1 < 0) {
+                    throw new CalculatorException("Error");
+                }
                 return Math.sqrt(op1);
             case BACKWARD:
+                if(op1 == 0) {
+                    throw new CalculatorException("Division by 0");
+                }
                 return 1/op1;
             case PERCENT:
                 return op2*op1/100;
@@ -169,9 +186,12 @@ public class Calculator1 {
         return 0;
     }
 
-    public void executeOperation() {
+    public void executeOperation() throws CalculatorException{
         switch (lastOperation) {
             case DIV:
+                if(op[1] == 0) {
+                    throw new CalculatorException("Division by 0");
+                }
                 op[0] /= op[1];
                 break;
             case MUL:
@@ -188,8 +208,9 @@ public class Calculator1 {
         }
     }
 
-    public void changeSign() {
+    public double changeSign() {
         op[0] *= -1;
+        return op[0];
     }
 
     public void clear() {
