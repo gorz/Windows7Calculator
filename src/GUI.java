@@ -28,11 +28,11 @@ public class GUI extends JFrame {
 
     private boolean isValueTyped;
     private StringBuilder currentValue;
-    private Calculator1 calculator;
+    private Calculator calculator;
 
     public GUI() {
         super("Calculator");
-        calculator = new Calculator1();
+        calculator = new Calculator();
         initGui();
         initListeners();
         currentValue = new StringBuilder("0");
@@ -104,7 +104,7 @@ public class GUI extends JFrame {
 
     private static String doubleToString(double d) {
         String value = Double.toString(d);
-        if(((long) d) == d) {
+        if(value.endsWith(".0")) {
             value = value.split("\\.")[0];
         }
         if(value.equals("-0")) {
@@ -129,12 +129,12 @@ public class GUI extends JFrame {
                         break;
                     }
                 }
-                Calculator1.OPERATION operation = Calculator1.OPERATION.NONE;
+                Calculator.OPERATION operation = Calculator.OPERATION.NONE;
                 switch(BUTTONS.values()[buttonIndex]) {
-                    case DIV: operation = Calculator1.OPERATION.DIV; break;
-                    case MUL: operation = Calculator1.OPERATION.MUL; break;
-                    case PLUS: operation = Calculator1.OPERATION.PLUS; break;
-                    case MINUS: operation = Calculator1.OPERATION.MINUS; break;
+                    case DIV: operation = Calculator.OPERATION.DIV; break;
+                    case MUL: operation = Calculator.OPERATION.MUL; break;
+                    case PLUS: operation = Calculator.OPERATION.PLUS; break;
+                    case MINUS: operation = Calculator.OPERATION.MINUS; break;
                 }
                 try {
                     if(isValueTyped) {
@@ -189,11 +189,11 @@ public class GUI extends JFrame {
                         break;
                     }
                 }
-                Calculator1.FUNCTION function = Calculator1.FUNCTION.SQRT;
+                Calculator.FUNCTION function = Calculator.FUNCTION.SQRT;
                 switch(BUTTONS.values()[buttonIndex]) {
-                    case SQRT: function = Calculator1.FUNCTION.SQRT; break;
-                    case INVERSE: function = Calculator1.FUNCTION.BACKWARD; break;
-                    case PERCENT: function = Calculator1.FUNCTION.PERCENT; break;
+                    case SQRT: function = Calculator.FUNCTION.SQRT; break;
+                    case INVERSE: function = Calculator.FUNCTION.BACKWARD; break;
+                    case PERCENT: function = Calculator.FUNCTION.PERCENT; break;
                 }
                 try {
                     if(isValueTyped) {
@@ -268,10 +268,10 @@ public class GUI extends JFrame {
             }
         });
 
-        /*buttons[BUTTONS.MEMORY_CLEAR.ordinal()].addActionListener(new ActionListener() {
+        buttons[BUTTONS.MEMORY_CLEAR.ordinal()].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                calculator.setMemory(0);
+                calculator.memoryClear();
             }
         });
 
@@ -279,34 +279,42 @@ public class GUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(isValueTyped) {
-                    calculator.setMemory(getValue());
-                } else {
-                    calculator.setMemory(calculator.getValue());
+                    calculator.setInput(getValue());
                 }
+                calculator.memorySet();
+                clear();
             }
         });
 
         buttons[BUTTONS.MEMORY_READ.ordinal()].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setValue(calculator.readMemory());
-                updateInputField();
+                showResults(calculator.memoryRead());
+                clear();
             }
         });
 
         buttons[BUTTONS.MEMORY_PLUS.ordinal()].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                calculator.addToMemory(getValue());
+                if(isValueTyped) {
+                    calculator.setInput(getValue());
+                }
+                calculator.memoryPlus();
+                clear();
             }
         });
 
         buttons[BUTTONS.MEMORY_MINUS.ordinal()].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                calculator.subFromMemory(getValue());
+                if(isValueTyped) {
+                    calculator.setInput(getValue());
+                }
+                calculator.memoryMinus();
+                clear();
             }
-        });*/
+        });
     }
 
     private void initGui() {
