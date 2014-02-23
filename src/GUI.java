@@ -20,7 +20,7 @@ public class GUI extends JFrame {
             "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
             "MC", "MR", "MS", "M+", "M-",
             "←", "CE", "C", "±", "√", "/", "*", "+",
-            "-", "%", "1/x", ".", "="
+            "-", "%", "1/x", ",", "="
     };
 
     private JButton buttons[];
@@ -54,12 +54,12 @@ public class GUI extends JFrame {
 
     private void putCharacter(String c) {
         isValueTyped = true;
-        boolean isDot = c.equals(".");
+        boolean isDot = c.equals(",");
         if(currentValue.length() == 1 && currentValue.charAt(0) == '0' && !isDot) {
             currentValue.replace(0, 1, c);
             return;
         }
-        if(isDot && currentValue.indexOf(".") != -1) {
+        if(isDot && currentValue.indexOf(",") != -1) {
             return;
         }
         currentValue.append(c);
@@ -99,7 +99,7 @@ public class GUI extends JFrame {
     }
 
     private double getValue() {
-        return Double.valueOf(currentValue.toString());
+        return Double.valueOf(currentValue.toString().replace(',', '.'));
     }
 
     private static String doubleToString(double d) {
@@ -110,7 +110,7 @@ public class GUI extends JFrame {
         if(value.equals("-0")) {
             value = "0";
         }
-        return value;
+        return value.replace('.', ',');
     }
 
     public static void main(String[] args) {
