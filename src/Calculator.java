@@ -107,12 +107,12 @@ public class Calculator {
                 break;
             case FUNCTION_ACTION:
                 if(isValueInput) {
-                    op[0] = executeFunction(f, input, op[0]);
+                    op[1] = executeFunction(f, input, op[0]);
                     isValueInput = false;
                 } else {
-                    op[0] = executeFunction(f, op[0], op[0]);
+                    op[1] = executeFunction(f, op[1], op[0]);
                 }
-                result = op[0];
+                result = op[1];
                 break;
             case EQUAL_ACTION:
                 if(isValueInput) {
