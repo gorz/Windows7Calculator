@@ -8,6 +8,10 @@ public class Calculator {
     private static final int FUNCTION_ACTION = 2;
     private static final int EQUAL_ACTION = 3;
 
+    private static final String OVERFLOW = "Переполнение";
+    private static final String DIVISION_BY_ZERO = "Деление на ноль не возможно";
+    private static final String ILLEGAL_VALUE = "Недопустимый ввод";
+
     enum OPERATION {
         DIV,
         MUL,
@@ -24,7 +28,7 @@ public class Calculator {
 
     private double op[], input, memory;
     private OPERATION lastOperation;
-    private int lastAction;
+    private int lastAction, whereResult;
     private boolean isValueInput;
 
     public Calculator() {
@@ -39,10 +43,21 @@ public class Calculator {
     }
 
     public void clearResult() {
-        op[0] = 0;
+        op[whereResult] = 0;
     }
 
-    public double setOperation(OPERATION operation) throws CalculatorException {
+    public double getResult() throws CalculatorException{
+        if(Double.isInfinite(op[whereResult])) {
+            throw new CalculatorException(OVERFLOW);
+        }
+        return op[whereResult];
+    }
+
+    public double getMemory() {
+        return memory;
+    }
+
+    public void setOperation(OPERATION operation) throws CalculatorException {
         switch (lastAction) {
             case NO_ACTION:
                 if(isValueInput) {
@@ -56,9 +71,8 @@ public class Calculator {
                     op[1] = input;
                     isValueInput = false;
                     executeOperation();
-                } else {
-                    op[1] = op[0];
                 }
+                op[1] = op[0];
                 break;
             case FUNCTION_ACTION:
                 if(isValueInput) {
@@ -81,11 +95,10 @@ public class Calculator {
         }
         lastOperation = operation;
         lastAction = OPERATION_ACTION;
-        return op[0];
+        whereResult = 0;
     }
 
-    public double calculateFunction(FUNCTION f) throws CalculatorException {
-        double result = 0;
+    public void calculateFunction(FUNCTION f) throws CalculatorException {
         switch (lastAction) {
             case NO_ACTION:
                 if(isValueInput) {
@@ -93,7 +106,7 @@ public class Calculator {
                     isValueInput = false;
                 }
                 op[0] = executeFunction(f, op[1], op[0]);
-                result = op[0];
+                whereResult = 0;
                 break;
             case OPERATION_ACTION:
                 if(isValueInput) {
@@ -103,7 +116,7 @@ public class Calculator {
                     op[1] = op[0];
                 }
                 op[1] = executeFunction(f, op[1], op[0]);
-                result = op[1];
+                whereResult = 1;
                 break;
             case FUNCTION_ACTION:
                 if(isValueInput) {
@@ -112,7 +125,7 @@ public class Calculator {
                 } else {
                     op[1] = executeFunction(f, op[1], op[0]);
                 }
-                result = op[1];
+                whereResult = 1;
                 break;
             case EQUAL_ACTION:
                 if(isValueInput) {
@@ -121,14 +134,13 @@ public class Calculator {
                 } else {
                     op[0] = executeFunction(f, op[0], op[0]);
                 }
-                result = op[0];
+                whereResult = 0;
                 break;
         }
         lastAction = FUNCTION_ACTION;
-        return result;
     }
 
-    public double calculate() throws CalculatorException {
+    public void calculate() throws CalculatorException {
         switch (lastAction) {
             case NO_ACTION:
                 if(isValueInput) {
@@ -166,57 +178,83 @@ public class Calculator {
                 break;
         }
         lastAction = EQUAL_ACTION;
-        return op[0];
+        whereResult = 0;
     }
 
     public double executeFunction(FUNCTION f, double op1, double op2) throws CalculatorException {
+        double result = 0;
         switch (f) {
             case SQRT:
                 if(op1 < 0) {
-                    throw new CalculatorException("Error");
+                    throw new CalculatorException(ILLEGAL_VALUE);
                 }
-                return Math.sqrt(op1);
+                result = Math.sqrt(op1);
+                if(result == 0.0 && op1 != 0.0) {
+                    throw new CalculatorException(OVERFLOW);
+                }
+                break;
             case BACKWARD:
                 if(op1 == 0) {
-                    throw new CalculatorException("Division by 0");
+                    throw new CalculatorException(DIVISION_BY_ZERO);
                 }
-                return 1/op1;
+                result = 1/op1;
+                if(result == 0.0) {
+                    throw new CalculatorException(OVERFLOW);
+                }
+                break;
             case PERCENT:
-                return op2*op1/100;
+                result = op2*op1/100;
+                if(result == 0.0 && op1 != 0.0 && op2 != 0.0) {
+                    throw new CalculatorException(OVERFLOW);
+                }
+                break;
         }
-        return 0;
+        return result;
     }
 
     public void executeOperation() throws CalculatorException{
+        double result = 0;
         switch (lastOperation) {
             case DIV:
                 if(op[1] == 0) {
-                    throw new CalculatorException("Division by 0");
+                    throw new CalculatorException(DIVISION_BY_ZERO);
                 }
-                op[0] /= op[1];
+                result = op[0] / op[1];
+                if(result == 0.0) {
+                    throw new CalculatorException(OVERFLOW);
+                }
                 break;
             case MUL:
-                op[0] *= op[1];
+                result = op[0] * op[1];
+                if(result == 0.0 && op[0] != 0.0 && op[1] != 0.0) {
+                    throw new CalculatorException(OVERFLOW);
+                }
                 break;
             case PLUS:
-                op[0] += op[1];
+                result = op[0] + op[1];
+                if(result == 0.0 && !(op[0] != op[1] && Math.abs(op[0]) == Math.abs(op[1]))) {
+                    throw new CalculatorException(OVERFLOW);
+                }
                 break;
             case MINUS:
-                op[0] -= op[1];
+                result = op[0] - op[1];
+                if(result == 0.0 && op[0] != op[1]) {
+                    throw new CalculatorException(OVERFLOW);
+                }
                 break;
         }
+        op[0] = result;
     }
 
-    public double changeSign() {
-        op[0] *= -1;
-        return op[0];
+    public void changeSign() {
+        op[whereResult] *= -1;
     }
 
     public void memorySet() {
         if(isValueInput) {
             memory = input;
         } else {
-            memory = op[0];
+            memory = op[whereResult];
         }
     }
 
@@ -224,7 +262,7 @@ public class Calculator {
         if(isValueInput) {
             memory += input;
         } else {
-            memory += op[0];
+            memory += op[whereResult];
         }
     }
 
@@ -232,7 +270,7 @@ public class Calculator {
         if(isValueInput) {
             memory -= input;
         } else {
-            memory -= op[0];
+            memory -= op[whereResult];
         }
     }
 
@@ -249,6 +287,7 @@ public class Calculator {
         op[0] = 0;
         op[1] = 0;
         input = 0;
+        whereResult = 0;
         lastOperation = OPERATION.NONE;
         isValueInput = false;
         lastAction = NO_ACTION;

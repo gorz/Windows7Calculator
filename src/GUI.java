@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Arc2D;
+import java.text.DecimalFormat;
 
 /**
  * Created by gorz on 18.02.14.
@@ -24,7 +25,8 @@ public class GUI extends JFrame {
     };
 
     private JButton buttons[];
-    private JTextField inputField;
+    private Text inputField;
+    private Formatter formatter;
 
     private boolean isValueTyped;
     private StringBuilder currentValue;
@@ -33,6 +35,7 @@ public class GUI extends JFrame {
     public GUI() {
         super("Calculator");
         calculator = new Calculator();
+        formatter = new Formatter();
         initGui();
         initListeners();
         currentValue = new StringBuilder("0");
@@ -49,17 +52,26 @@ public class GUI extends JFrame {
             currentValue.append("0");
         } else if(currentValue.length() == 1 && currentValue.charAt(0) == '-') {
             currentValue.setCharAt(0, '0');
+        } else if(currentValue.length() == 2 && currentValue.indexOf("-0") == 0) {
+            currentValue.setLength(1);
+            currentValue.setCharAt(0, '0');
         }
     }
 
     private void putCharacter(String c) {
+        boolean valueHasDot = currentValue.indexOf(",") != -1;
+        boolean valueHasMinus = currentValue.indexOf("-") == 0;
+        int numbersInValue = currentValue.length() - (valueHasDot ? 1 : 0) - (valueHasMinus ? 1 : 0);
+        if(numbersInValue == 16) {
+            return;
+        }
         isValueTyped = true;
         boolean isDot = c.equals(",");
         if(currentValue.length() == 1 && currentValue.charAt(0) == '0' && !isDot) {
             currentValue.replace(0, 1, c);
             return;
         }
-        if(isDot && currentValue.indexOf(",") != -1) {
+        if(isDot && valueHasDot) {
             return;
         }
         currentValue.append(c);
@@ -88,7 +100,11 @@ public class GUI extends JFrame {
     }
 
     private void showResults(double result) {
-        inputField.setText(doubleToString(result));
+        inputField.setText(formatter.format(result));
+    }
+
+    private void setMemoryFlag(boolean f) {
+        inputField.setMemoryFlagVisible(f);
     }
 
     private void updateInputField() {
@@ -102,176 +118,162 @@ public class GUI extends JFrame {
         return Double.valueOf(currentValue.toString().replace(',', '.'));
     }
 
-    private static String doubleToString(double d) {
-        String value = Double.toString(d);
-        if(value.endsWith(".0")) {
-            value = value.split("\\.")[0];
-        }
-        if(value.equals("-0")) {
-            value = "0";
-        }
-        return value.replace('.', ',');
-    }
-
     public static void main(String[] args) {
         new GUI();
+        /*StringBuilder  b = new StringBuilder(16 + Double.MAX_EXPONENT);
+        for(int i=0; i<16; i++) {
+            b.append('#');
+        }
+        b.append('.');
+        for(int i=0; i<Double.MAX_EXPONENT; i++) {
+            b.append('#');
+        }
+        DecimalFormat format = new DecimalFormat(b.toString());
+        System.out.println(format.format(0.00000000000000001));*/
+    }
+
+    public void onInput(String ch) {
+        putCharacter(ch);
+        updateInputField();
+    }
+
+    public void onOperationButtonClick(Calculator.OPERATION operation) {
+        try {
+            if(isValueTyped) {
+                calculator.setInput(getValue());
+            }
+            calculator.setOperation(operation);
+            showResults(calculator.getResult());
+        } catch (CalculatorException e) {
+            showError(e.getMessage());
+            calculator.clear();
+        }
+        clear();
+    }
+
+    public void onEqualButtonClick() {
+        try {
+            if(isValueTyped) {
+                calculator.setInput(getValue());
+            }
+            calculator.calculate();
+            showResults(calculator.getResult());
+        } catch (CalculatorException e) {
+            showError(e.getMessage());
+            calculator.clear();
+        }
+        clear();
+    }
+
+    public void onFunctionButtonClick(Calculator.FUNCTION function) {
+        try {
+            if(isValueTyped) {
+                calculator.setInput(getValue());
+            }
+            calculator.calculateFunction(function);
+            showResults(calculator.getResult());
+        } catch (CalculatorException e) {
+            showError(e.getMessage());
+            calculator.clear();
+        }
+        clear();
+    }
+
+    public void onBackspaceButtonClick() {
+        removeLastCharacter();
+        updateInputField();
+    }
+
+    public void onChangeSignButtonClick() {
+        if(isValueTyped) {
+            changeSign();
+            updateInputField();
+        } else {
+            try {
+                calculator.changeSign();
+                showResults(calculator.getResult());
+            } catch (CalculatorException e) {
+                showError(e.getMessage());
+                clear();
+                calculator.clear();
+            }
+        }
+    }
+
+    //TODO: fix
+    public void onClearButtonClick() {
+        clear();
+        calculator.clearResult();
+        isValueTyped = true; //may be bug
+        updateInputField();
+    }
+
+    //TODO: fix
+    public void onClearAllButtonClick() {
+        calculator.clear();
+        clear();
+        isValueTyped = true; //may be bug
+        updateInputField();
     }
 
     private void initListeners() {
-        ActionListener onOperation = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                JButton source = (JButton)event.getSource();
-                int buttonIndex = BUTTONS.EQUAL.ordinal();
-                for(int i = 0; i<buttons.length; i++) {
-                    if(buttons[i] == source) {
-                        buttonIndex = i;
-                        break;
-                    }
-                }
-                Calculator.OPERATION operation = Calculator.OPERATION.NONE;
-                switch(BUTTONS.values()[buttonIndex]) {
-                    case DIV: operation = Calculator.OPERATION.DIV; break;
-                    case MUL: operation = Calculator.OPERATION.MUL; break;
-                    case PLUS: operation = Calculator.OPERATION.PLUS; break;
-                    case MINUS: operation = Calculator.OPERATION.MINUS; break;
-                }
-                try {
-                    if(isValueTyped) {
-                        calculator.setInput(getValue());
-                    }
-                    showResults(calculator.setOperation(operation));
-                    clear();
-                } catch (CalculatorException e) {
-                    showError(e.getMessage());
-                    clear();
-                    calculator.clear();
-                } catch (NumberFormatException e) {
+        buttons[BUTTONS.PLUS.ordinal()].addActionListener(
+                new Listeners.onOperation(this, Calculator.OPERATION.PLUS)
+        );
+        buttons[BUTTONS.MINUS.ordinal()].addActionListener(
+                new Listeners.onOperation(this, Calculator.OPERATION.MINUS)
+        );
+        buttons[BUTTONS.DIV.ordinal()].addActionListener(
+                new Listeners.onOperation(this, Calculator.OPERATION.DIV)
+        );
+        buttons[BUTTONS.MUL.ordinal()].addActionListener(
+                new Listeners.onOperation(this, Calculator.OPERATION.MUL)
+        );
 
-                }
-            }
-        };
+        buttons[BUTTONS.EQUAL.ordinal()].addActionListener(
+                new Listeners.onEqual(this)
+        );
 
-        buttons[BUTTONS.PLUS.ordinal()].addActionListener(onOperation);
-        buttons[BUTTONS.MINUS.ordinal()].addActionListener(onOperation);
-        buttons[BUTTONS.DIV.ordinal()].addActionListener(onOperation);
-        buttons[BUTTONS.MUL.ordinal()].addActionListener(onOperation);
+        buttons[BUTTONS.SQRT.ordinal()].addActionListener(
+                new Listeners.onFunction(this, Calculator.FUNCTION.SQRT)
+        );
+        buttons[BUTTONS.PERCENT.ordinal()].addActionListener(
+                new Listeners.onFunction(this, Calculator.FUNCTION.PERCENT)
+        );
+        buttons[BUTTONS.INVERSE.ordinal()].addActionListener(
+                new Listeners.onFunction(this, Calculator.FUNCTION.BACKWARD)
+        );
 
-        buttons[BUTTONS.EQUAL.ordinal()].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                try {
-                    if(isValueTyped) {
-                        calculator.setInput(getValue());
-                    }
-                    showResults(calculator.calculate());
-                    clear();
-                } catch (CalculatorException e) {
-                    showError(e.getMessage());
-                    clear();
-                    calculator.clear();
-                } catch (NumberFormatException e) {
+        ActionListener onNumberClick =
+                new Listeners.onNumber(this);
 
-                }
-
-
-            }
-        });
-
-        ActionListener onFunction = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                JButton source = (JButton)event.getSource();
-                int buttonIndex = BUTTONS.EQUAL.ordinal();
-                for(int i = 0; i<buttons.length; i++) {
-                    if(buttons[i] == source) {
-                        buttonIndex = i;
-                        break;
-                    }
-                }
-                Calculator.FUNCTION function = Calculator.FUNCTION.SQRT;
-                switch(BUTTONS.values()[buttonIndex]) {
-                    case SQRT: function = Calculator.FUNCTION.SQRT; break;
-                    case INVERSE: function = Calculator.FUNCTION.BACKWARD; break;
-                    case PERCENT: function = Calculator.FUNCTION.PERCENT; break;
-                }
-                try {
-                    if(isValueTyped) {
-                        calculator.setInput(getValue());
-                    }
-                    showResults(calculator.calculateFunction(function));
-                    clear();
-                } catch (CalculatorException e) {
-                    showError(e.getMessage());
-                    clear();
-                    calculator.clear();
-                } catch (NumberFormatException e) {
-
-                }
-            }
-        };
-        buttons[BUTTONS.SQRT.ordinal()].addActionListener(onFunction);
-        buttons[BUTTONS.PERCENT.ordinal()].addActionListener(onFunction);
-        buttons[BUTTONS.INVERSE.ordinal()].addActionListener(onFunction);
-
-        ActionListener onNumberClick = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JButton source = (JButton)e.getSource();
-                putCharacter(source.getText());
-                updateInputField();
-            }
-        };
-        //первіми в массиве кнопок всегду идут кнопки с цифрами
+        //первыми в массиве кнопок всегду идут кнопки с цифрами
         for(int i=0; i<10; i++) {
             buttons[i].addActionListener(onNumberClick);
         }
         buttons[BUTTONS.DOT.ordinal()].addActionListener(onNumberClick);
 
-        buttons[BUTTONS.BACKSPACE.ordinal()].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                removeLastCharacter();
-                updateInputField();
-            }
-        });
+        buttons[BUTTONS.BACKSPACE.ordinal()].addActionListener(
+                new Listeners.onBackspace(this)
+        );
 
-        buttons[BUTTONS.PLUS_MINUS.ordinal()].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(isValueTyped) {
-                    changeSign();
-                    updateInputField();
-                } else {
-                    showResults(calculator.changeSign());
-                }
-            }
-        });
+        buttons[BUTTONS.PLUS_MINUS.ordinal()].addActionListener(
+                new Listeners.onChangeSign(this)
+        );
 
-        buttons[BUTTONS.CLEAR.ordinal()].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                clear();
-                calculator.clearResult();
-                isValueTyped = true;
-                updateInputField();
-            }
-        });
+        buttons[BUTTONS.CLEAR.ordinal()].addActionListener(
+                new Listeners.onClear(this)
+        );
 
-        buttons[BUTTONS.CLEAR_ALL.ordinal()].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                calculator.clear();
-                clear();
-                isValueTyped = true;
-                updateInputField();
-            }
-        });
+        buttons[BUTTONS.CLEAR_ALL.ordinal()].addActionListener(
+                new Listeners.onClearAll(this)
+        );
 
         buttons[BUTTONS.MEMORY_CLEAR.ordinal()].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 calculator.memoryClear();
+                setMemoryFlag(false);
             }
         });
 
@@ -282,6 +284,7 @@ public class GUI extends JFrame {
                     calculator.setInput(getValue());
                 }
                 calculator.memorySet();
+                setMemoryFlag(calculator.getMemory() != 0);
                 clear();
             }
         });
@@ -301,6 +304,7 @@ public class GUI extends JFrame {
                     calculator.setInput(getValue());
                 }
                 calculator.memoryPlus();
+                setMemoryFlag(calculator.getMemory() != 0);
                 clear();
             }
         });
@@ -312,6 +316,7 @@ public class GUI extends JFrame {
                     calculator.setInput(getValue());
                 }
                 calculator.memoryMinus();
+                setMemoryFlag(calculator.getMemory() != 0);
                 clear();
             }
         });
@@ -322,7 +327,7 @@ public class GUI extends JFrame {
         GridBagConstraints constraints = new GridBagConstraints();
         pane.setLayout(new GridBagLayout());
 
-        inputField = new JTextField();
+        inputField = new Text();
         Font font = new Font(inputField.getFont().getFontName(), Font.PLAIN, 14);
         inputField.setFont(font);
         inputField.setDisabledTextColor(Color.BLACK);
