@@ -248,6 +248,10 @@ public class GUI extends JFrame {
     }
 
     public void onMemoryButtonClick(Calculator.MEMORY action) {
+        if(isValueTyped) {
+            calculator.setInput(getValue());
+            clear();
+        }
         calculator.memoryAction(action);
         if(action != Calculator.MEMORY.READ) {
             setMemoryFlag(calculator.getMemory() != 0.0);
