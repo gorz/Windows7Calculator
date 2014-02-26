@@ -5,7 +5,6 @@ public class Calculator {
 
     private static final int NO_ACTION = 0;
     private static final int OPERATION_ACTION = 1;
-    private static final int FUNCTION_ACTION = 2;
     private static final int EQUAL_ACTION = 3;
 
     private static final String OVERFLOW = "Переполнение";
@@ -26,19 +25,19 @@ public class Calculator {
         BACKWARD
     }
 
-    private double op[], input, memory;
+    private double op[], memory;
     private OPERATION lastOperation;
     private int lastAction, whereResult;
     private boolean isValueInput;
 
     public Calculator() {
-        op = new double[2];
+        op = new double[3];
         memory = 0;
         clear();
     }
 
     public void setInput(double in) {
-        input = in;
+        op[2] = in;
         isValueInput = true;
     }
 
@@ -61,32 +60,23 @@ public class Calculator {
         switch (lastAction) {
             case NO_ACTION:
                 if(isValueInput) {
-                    op[0] = input;
-                    op[1] = input;
+                    op[0] = op[2];
+                    op[1] = op[2];
                     isValueInput = false;
                 }
                 break;
             case OPERATION_ACTION:
                 if(isValueInput) {
-                    op[1] = input;
+                    op[1] = op[2];
                     isValueInput = false;
                     executeOperation();
                 }
                 op[1] = op[0];
                 break;
-            case FUNCTION_ACTION:
-                if(isValueInput) {
-                    op[1] = input;
-                    isValueInput = false;
-                    executeOperation();
-                } else {
-                    executeOperation();
-                }
-                break;
             case EQUAL_ACTION:
                 if(isValueInput) {
-                    op[0] = input;
-                    op[1] = input;
+                    op[0] = op[2];
+                    op[1] = op[2];
                     isValueInput = false;
                 } else {
                     op[1] = op[0];
@@ -99,77 +89,34 @@ public class Calculator {
     }
 
     public void calculateFunction(FUNCTION f) throws CalculatorException {
-        switch (lastAction) {
-            case NO_ACTION:
-                if(isValueInput) {
-                    op[1] = input;
-                    isValueInput = false;
-                }
-                op[0] = executeFunction(f, op[1], op[0]);
-                whereResult = 0;
-                break;
-            case OPERATION_ACTION:
-                if(isValueInput) {
-                    op[1] = input;
-                    isValueInput = false;
-                } else {
-                    op[1] = op[0];
-                }
-                op[1] = executeFunction(f, op[1], op[0]);
-                whereResult = 1;
-                break;
-            case FUNCTION_ACTION:
-                if(isValueInput) {
-                    op[1] = executeFunction(f, input, op[0]);
-                    isValueInput = false;
-                } else {
-                    op[1] = executeFunction(f, op[1], op[0]);
-                }
-                whereResult = 1;
-                break;
-            case EQUAL_ACTION:
-                if(isValueInput) {
-                    op[0] = executeFunction(f, input, op[0]);
-                    isValueInput = false;
-                } else {
-                    op[0] = executeFunction(f, op[0], op[0]);
-                }
-                whereResult = 0;
-                break;
+        if (!isValueInput) {
+            op[2] = op[0];
         }
-        lastAction = FUNCTION_ACTION;
+        setInput(executeFunction(f, op[2], op[0]));
+        whereResult = 2;
     }
 
     public void calculate() throws CalculatorException {
         switch (lastAction) {
             case NO_ACTION:
                 if(isValueInput) {
-                    op[1] = input;
-                    op[0] = input;
+                    op[1] = op[2];
+                    op[0] = op[2];
                     isValueInput = false;
                 }
                 break;
             case OPERATION_ACTION:
                 if(isValueInput) {
-                    op[1] = input;
+                    op[1] = op[2];
                     isValueInput = false;
                 } else {
 
                 }
                 executeOperation();
                 break;
-            case FUNCTION_ACTION:
-                if(isValueInput) {
-                    op[1] = input;
-                    isValueInput = false;
-                    executeOperation();
-                } else {
-                    executeOperation();
-                }
-                break;
             case EQUAL_ACTION:
                 if(isValueInput) {
-                    op[0] = input;
+                    op[0] = op[2];
                     isValueInput = false;
                 } else {
 
@@ -252,7 +199,7 @@ public class Calculator {
 
     public void memorySet() {
         if(isValueInput) {
-            memory = input;
+            memory = op[2];
         } else {
             memory = op[whereResult];
         }
@@ -260,7 +207,7 @@ public class Calculator {
 
     public void memoryPlus() {
         if(isValueInput) {
-            memory += input;
+            memory += op[2];
         } else {
             memory += op[whereResult];
         }
@@ -268,7 +215,7 @@ public class Calculator {
 
     public void memoryMinus() {
         if(isValueInput) {
-            memory -= input;
+            memory -= op[2];
         } else {
             memory -= op[whereResult];
         }
@@ -286,7 +233,7 @@ public class Calculator {
     public void clear() {
         op[0] = 0;
         op[1] = 0;
-        input = 0;
+        op[2] = 0;
         whereResult = 0;
         lastOperation = OPERATION.NONE;
         isValueInput = false;

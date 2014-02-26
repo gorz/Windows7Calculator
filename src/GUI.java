@@ -26,9 +26,11 @@ public class GUI extends JFrame {
 
     private JButton buttons[];
     private Text inputField;
+    private Font resultFont, errorFont;
+
     private Formatter formatter;
 
-    private boolean isValueTyped;
+    private boolean isValueTyped, isBlocked;
     private StringBuilder currentValue;
     private Calculator calculator;
 
@@ -40,7 +42,17 @@ public class GUI extends JFrame {
         initListeners();
         currentValue = new StringBuilder("0");
         isValueTyped = true;
+        isBlocked = false;
         updateInputField();
+    }
+
+    private void setBlocked(boolean f) {
+        isBlocked = f;
+        if(f) {
+            inputField.setFont(errorFont);
+        } else {
+            inputField.setFont(resultFont);
+        }
     }
 
     private void removeLastCharacter() {
@@ -96,6 +108,7 @@ public class GUI extends JFrame {
     }
 
     private void showError(String error) {
+        setBlocked(true);
         inputField.setText(error);
     }
 
@@ -133,11 +146,17 @@ public class GUI extends JFrame {
     }
 
     public void onInput(String ch) {
+        if(isBlocked) {
+            return;
+        }
         putCharacter(ch);
         updateInputField();
     }
 
     public void onOperationButtonClick(Calculator.OPERATION operation) {
+        if(isBlocked) {
+            return;
+        }
         try {
             if(isValueTyped) {
                 calculator.setInput(getValue());
@@ -152,6 +171,9 @@ public class GUI extends JFrame {
     }
 
     public void onEqualButtonClick() {
+        if(isBlocked) {
+            return;
+        }
         try {
             if(isValueTyped) {
                 calculator.setInput(getValue());
@@ -166,6 +188,9 @@ public class GUI extends JFrame {
     }
 
     public void onFunctionButtonClick(Calculator.FUNCTION function) {
+        if(isBlocked) {
+            return;
+        }
         try {
             if(isValueTyped) {
                 calculator.setInput(getValue());
@@ -180,11 +205,17 @@ public class GUI extends JFrame {
     }
 
     public void onBackspaceButtonClick() {
+        if(isBlocked) {
+            return;
+        }
         removeLastCharacter();
         updateInputField();
     }
 
     public void onChangeSignButtonClick() {
+        if(isBlocked) {
+            return;
+        }
         if(isValueTyped) {
             changeSign();
             updateInputField();
@@ -206,14 +237,13 @@ public class GUI extends JFrame {
         calculator.clearResult();
         isValueTyped = true; //may be bug
         updateInputField();
+        setBlocked(false);
     }
 
     //TODO: fix
     public void onClearAllButtonClick() {
         calculator.clear();
-        clear();
-        isValueTyped = true; //may be bug
-        updateInputField();
+        onClearButtonClick();
     }
 
     private void initListeners() {
@@ -328,8 +358,9 @@ public class GUI extends JFrame {
         pane.setLayout(new GridBagLayout());
 
         inputField = new Text();
-        Font font = new Font(inputField.getFont().getFontName(), Font.PLAIN, 14);
-        inputField.setFont(font);
+        resultFont = new Font(inputField.getFont().getFontName(), Font.PLAIN, 14);
+        errorFont = new Font(inputField.getFont().getFontName(), Font.PLAIN, 11);
+        inputField.setFont(resultFont);
         inputField.setDisabledTextColor(Color.BLACK);
         inputField.setEnabled(false);
         inputField.setHorizontalAlignment(JTextField.RIGHT);
