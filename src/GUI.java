@@ -134,16 +134,6 @@ public class GUI extends JFrame {
 
     public static void main(String[] args) {
         new GUI();
-        /*StringBuilder  b = new StringBuilder(16 + Double.MAX_EXPONENT);
-        for(int i=0; i<16; i++) {
-            b.append('#');
-        }
-        b.append('.');
-        for(int i=0; i<Double.MAX_EXPONENT; i++) {
-            b.append('#');
-        }
-        DecimalFormat format = new DecimalFormat(b.toString());
-        System.out.println(format.format(0.00000000000000001));*/
     }
 
     public void onInput(String ch) {
