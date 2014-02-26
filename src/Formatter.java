@@ -9,11 +9,6 @@ public class Formatter {
     private DecimalFormat formatWithExponent;
 
     public Formatter() {
-        System.out.println(Double.MAX_VALUE);
-        System.out.println(Double.MAX_EXPONENT);
-        System.out.println(Double.MIN_VALUE);
-        System.out.println(Double.MIN_NORMAL);
-        System.out.println(Double.MIN_EXPONENT);
         format = new DecimalFormat("################.################");
         formatWithExponent = new DecimalFormat("################.###############E00");
     }

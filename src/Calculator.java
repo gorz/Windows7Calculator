@@ -189,6 +189,8 @@ public class Calculator {
                     throw new CalculatorException(OVERFLOW);
                 }
                 break;
+            case NONE:
+                return;
         }
         op[0] = result;
     }
@@ -197,37 +199,34 @@ public class Calculator {
         op[whereResult] *= -1;
     }
 
-    public void memorySet() {
-        if(isValueInput) {
-            memory = op[2];
-        } else {
-            memory = op[whereResult];
+    enum MEMORY {
+        CLEAR,
+        SET,
+        READ,
+        PLUS,
+        MINUS
+    };
+
+    public void memoryAction(MEMORY action) {
+        int position = isValueInput ? 2 : whereResult;
+        switch(action) {
+            case CLEAR:
+                memory = 0;
+                break;
+            case READ:
+                setInput(memory);
+                whereResult = 2;
+                break;
+            case SET:
+                memory = op[position];
+                break;
+            case PLUS:
+                memory += op[position];
+                break;
+            case MINUS:
+                memory -= op[position];
+                break;
         }
-    }
-
-    public void memoryPlus() {
-        if(isValueInput) {
-            memory += op[2];
-        } else {
-            memory += op[whereResult];
-        }
-    }
-
-    public void memoryMinus() {
-        if(isValueInput) {
-            memory -= op[2];
-        } else {
-            memory -= op[whereResult];
-        }
-    }
-
-    public double memoryRead() {
-        setInput(memory);
-        return memory;
-    }
-
-    public void memoryClear() {
-        memory = 0;
     }
 
     public void clear() {

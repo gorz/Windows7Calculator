@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyListener;
 import java.awt.geom.Arc2D;
 import java.text.DecimalFormat;
 
@@ -246,7 +247,26 @@ public class GUI extends JFrame {
         onClearButtonClick();
     }
 
+    public void onMemoryButtonClick(Calculator.MEMORY action) {
+        calculator.memoryAction(action);
+        if(action != Calculator.MEMORY.READ) {
+            setMemoryFlag(calculator.getMemory() != 0.0);
+            return;
+        }
+        try {
+            showResults(calculator.getResult());
+        } catch (CalculatorException e) {
+            showError(e.getMessage());
+            calculator.clear();
+        }
+        clear();
+    }
+
     private void initListeners() {
+        KeyListener onKey = new Listeners.onKeyPress(this);
+        for(int i=0; i<buttons.length; i++) {
+            buttons[i].addKeyListener(onKey);
+        }
         buttons[BUTTONS.PLUS.ordinal()].addActionListener(
                 new Listeners.onOperation(this, Calculator.OPERATION.PLUS)
         );
@@ -299,57 +319,25 @@ public class GUI extends JFrame {
                 new Listeners.onClearAll(this)
         );
 
-        buttons[BUTTONS.MEMORY_CLEAR.ordinal()].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                calculator.memoryClear();
-                setMemoryFlag(false);
-            }
-        });
+        buttons[BUTTONS.MEMORY_CLEAR.ordinal()].addActionListener(
+                new Listeners.onMemory(this, Calculator.MEMORY.CLEAR)
+        );
 
-        buttons[BUTTONS.MEMORY_SET.ordinal()].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(isValueTyped) {
-                    calculator.setInput(getValue());
-                }
-                calculator.memorySet();
-                setMemoryFlag(calculator.getMemory() != 0);
-                clear();
-            }
-        });
+        buttons[BUTTONS.MEMORY_SET.ordinal()].addActionListener(
+                new Listeners.onMemory(this, Calculator.MEMORY.SET)
+        );
 
-        buttons[BUTTONS.MEMORY_READ.ordinal()].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                showResults(calculator.memoryRead());
-                clear();
-            }
-        });
+        buttons[BUTTONS.MEMORY_READ.ordinal()].addActionListener(
+                new Listeners.onMemory(this, Calculator.MEMORY.READ)
+        );
 
-        buttons[BUTTONS.MEMORY_PLUS.ordinal()].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(isValueTyped) {
-                    calculator.setInput(getValue());
-                }
-                calculator.memoryPlus();
-                setMemoryFlag(calculator.getMemory() != 0);
-                clear();
-            }
-        });
+        buttons[BUTTONS.MEMORY_PLUS.ordinal()].addActionListener(
+                new Listeners.onMemory(this, Calculator.MEMORY.PLUS)
+        );
 
-        buttons[BUTTONS.MEMORY_MINUS.ordinal()].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(isValueTyped) {
-                    calculator.setInput(getValue());
-                }
-                calculator.memoryMinus();
-                setMemoryFlag(calculator.getMemory() != 0);
-                clear();
-            }
-        });
+        buttons[BUTTONS.MEMORY_MINUS.ordinal()].addActionListener(
+                new Listeners.onMemory(this, Calculator.MEMORY.MINUS)
+        );
     }
 
     private void initGui() {

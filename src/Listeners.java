@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 /**
  * Created by gorz on 25.02.14.
@@ -124,6 +126,87 @@ public class Listeners {
             gui.onClearAllButtonClick();
         }
 
+    }
+
+    public static class onMemory implements ActionListener {
+
+        private GUI gui;
+        private Calculator.MEMORY action;
+
+        public onMemory(GUI gui, Calculator.MEMORY action) {
+            this.gui = gui;
+            this.action = action;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            gui.onMemoryButtonClick(action);
+        }
+
+    }
+
+    public static class onKeyPress implements KeyListener {
+
+        private GUI gui;
+
+        public onKeyPress(GUI gui) {
+            this.gui = gui;
+        }
+
+        @Override
+        public void keyTyped(KeyEvent e) {}
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            switch (e.getKeyChar()) {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                case ',':
+                    gui.onInput(e.getKeyChar()+"");
+                    return;
+                case '.':
+                    gui.onInput(",");
+                    return;
+                case '+':
+                    gui.onOperationButtonClick(Calculator.OPERATION.PLUS);
+                    return;
+                case '-':
+                    gui.onOperationButtonClick(Calculator.OPERATION.MINUS);
+                    return;
+                case '*':
+                    gui.onOperationButtonClick(Calculator.OPERATION.MUL);
+                    return;
+                case '/':
+                    gui.onOperationButtonClick(Calculator.OPERATION.DIV);
+                    return;
+                case '%':
+                    gui.onFunctionButtonClick(Calculator.FUNCTION.PERCENT);
+                    return;
+            }
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_EQUALS:
+                case KeyEvent.VK_ENTER:
+                    gui.onEqualButtonClick();
+                    return;
+                case KeyEvent.VK_ESCAPE:
+                    gui.onClearAllButtonClick();
+                    return;
+                case KeyEvent.VK_BACK_SPACE:
+                    gui.onBackspaceButtonClick();
+
+            }
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {}
     }
 
 }
