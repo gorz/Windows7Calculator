@@ -196,7 +196,8 @@ public class Calculator {
     }
 
     public void changeSign() {
-        op[whereResult] *= -1;
+        setInput(-1*op[whereResult]);
+        whereResult = 2;
     }
 
     enum MEMORY {
