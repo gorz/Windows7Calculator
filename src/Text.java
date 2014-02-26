@@ -11,7 +11,7 @@ public class Text extends JTextField {
 
     public Text() {
         super();
-        MFont =  new Font(getFont().getFontName(), Font.BOLD, 14);
+        MFont =  new Font(getFont().getFontName(), Font.BOLD, 13);
         isMemoryFlagVisible = false;
     }
 

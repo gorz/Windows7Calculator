@@ -19,9 +19,9 @@ public class Formatter {
     public String format(double d) {
         double abs = Math.abs(d);
         String result = "";
-        if(abs >= 10.0 && abs <= 9999999999999999.0) {
+        if(abs >= 10.0 && abs <= 1.E16-1) {
             result = formatWithDifferentLength(abs);
-        } else if(abs > 0.0000000000000001 && abs < 10) {
+        } else if(abs > 0.001 && abs < 10) {
             result = fraction.format(abs);
         } else if(abs == 0.0) {
             result = "0";

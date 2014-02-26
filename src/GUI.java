@@ -340,7 +340,7 @@ public class GUI extends JFrame {
         pane.setLayout(new GridBagLayout());
 
         inputField = new Text();
-        resultFont = new Font(inputField.getFont().getFontName(), Font.PLAIN, 14);
+        resultFont = new Font(inputField.getFont().getFontName(), Font.PLAIN, 13);
         errorFont = new Font(inputField.getFont().getFontName(), Font.PLAIN, 11);
         inputField.setFont(resultFont);
         inputField.setDisabledTextColor(Color.BLACK);
