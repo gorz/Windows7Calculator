@@ -11,19 +11,9 @@ public class Calculator {
     private static final String DIVISION_BY_ZERO = "Деление на ноль не возможно";
     private static final String ILLEGAL_VALUE = "Недопустимый ввод";
 
-    enum OPERATION {
-        DIV,
-        MUL,
-        MINUS,
-        PLUS,
-        NONE
-    };
-
-    enum FUNCTION {
-        SQRT,
-        PERCENT,
-        BACKWARD
-    }
+    enum OPERATION { DIV, MUL, MINUS, PLUS, NONE }
+    enum FUNCTION { SQRT, PERCENT, BACKWARD }
+    enum MEMORY { CLEAR, SET, READ, PLUS, MINUS }
 
     private double op[], memory;
     private OPERATION lastOperation;
@@ -42,7 +32,11 @@ public class Calculator {
     }
 
     public void clearResult() {
-        op[whereResult] = 0;
+        if(lastAction == OPERATION_ACTION) {
+            op[1] = 0;
+        } else {
+            op[whereResult] = 0;
+        }
     }
 
     public double getResult() throws CalculatorException{
@@ -179,7 +173,7 @@ public class Calculator {
                 break;
             case PLUS:
                 result = op[0] + op[1];
-                if(result == 0.0 && !(op[0] != op[1] && Math.abs(op[0]) == Math.abs(op[1]))) {
+                if((op[0] != 0 && op[1] != 0) && result == 0.0 && !(op[0] != op[1] && Math.abs(op[0]) == Math.abs(op[1]))) {
                     throw new CalculatorException(OVERFLOW);
                 }
                 break;
@@ -199,14 +193,6 @@ public class Calculator {
         setInput(-1*op[whereResult]);
         whereResult = 2;
     }
-
-    enum MEMORY {
-        CLEAR,
-        SET,
-        READ,
-        PLUS,
-        MINUS
-    };
 
     public void memoryAction(MEMORY action) {
         int position = isValueInput ? 2 : whereResult;

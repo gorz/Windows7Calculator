@@ -21,7 +21,7 @@ public class Formatter {
         String result = "";
         if(abs >= 10.0 && abs <= 1.E16-1) {
             result = formatWithDifferentLength(abs);
-        } else if(abs > 0.001 && abs < 10) {
+        } else if(abs > 0.00001 && abs < 10) {
             result = fraction.format(abs);
         } else if(abs == 0.0) {
             result = "0";
