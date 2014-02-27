@@ -24,7 +24,6 @@ public class Calculator {
     private double op[], memory;
     private OPERATION lastOperation;
     private int lastAction, whereResult;
-    private boolean isValueInput;
 
     public Calculator() {
         op = new double[3];
@@ -34,7 +33,7 @@ public class Calculator {
 
     public void setInput(double in) {
         op[INPUT] = in;
-        isValueInput = true;
+        whereResult = INPUT;
     }
 
     public void clearResult() {
@@ -59,25 +58,22 @@ public class Calculator {
     public void setOperation(OPERATION operation) throws CalculatorException {
         switch (lastAction) {
             case NO_ACTION:
-                if (isValueInput) {
+                if (whereResult == INPUT) {
                     op[ACCUMULATOR] = op[INPUT];
                     op[ARGUMENT] = op[INPUT];
-                    isValueInput = false;
                 }
                 break;
             case OPERATION_ACTION:
-                if (isValueInput) {
+                if (whereResult == INPUT) {
                     op[ARGUMENT] = op[INPUT];
-                    isValueInput = false;
                     executeOperation();
                 }
                 op[ARGUMENT] = op[ACCUMULATOR];
                 break;
             case EQUAL_ACTION:
-                if (isValueInput) {
+                if (whereResult == INPUT) {
                     op[ACCUMULATOR] = op[INPUT];
                     op[ARGUMENT] = op[INPUT];
-                    isValueInput = false;
                 } else {
                     op[ARGUMENT] = op[ACCUMULATOR];
                 }
@@ -85,11 +81,11 @@ public class Calculator {
         }
         lastOperation = operation;
         lastAction = OPERATION_ACTION;
-        whereResult = 0;
+        whereResult = ACCUMULATOR;
     }
 
     public void calculateFunction(FUNCTION f) throws CalculatorException {
-        if (!isValueInput) {
+        if (whereResult != INPUT) {
             op[INPUT] = op[ACCUMULATOR];
         }
         setInput(executeFunction(f, op[INPUT], op[ACCUMULATOR]));
@@ -99,33 +95,26 @@ public class Calculator {
     public void calculate() throws CalculatorException {
         switch (lastAction) {
             case NO_ACTION:
-                if (isValueInput) {
+                if (whereResult == INPUT) {
                     op[ARGUMENT] = op[INPUT];
                     op[ACCUMULATOR] = op[INPUT];
-                    isValueInput = false;
                 }
                 break;
             case OPERATION_ACTION:
-                if (isValueInput) {
+                if (whereResult == INPUT) {
                     op[ARGUMENT] = op[INPUT];
-                    isValueInput = false;
-                } else {
-
                 }
                 executeOperation();
                 break;
             case EQUAL_ACTION:
-                if (isValueInput) {
+                if (whereResult == INPUT) {
                     op[ACCUMULATOR] = op[INPUT];
-                    isValueInput = false;
-                } else {
-
                 }
                 executeOperation();
                 break;
         }
         lastAction = EQUAL_ACTION;
-        whereResult = 0;
+        whereResult = ACCUMULATOR;
     }
 
     public double executeFunction(FUNCTION f, double op1, double op2) throws CalculatorException {
@@ -200,11 +189,9 @@ public class Calculator {
 
     public void changeSign() {
         setInput(-1 * op[whereResult]);
-        whereResult = 2;
     }
 
     public void memoryAction(MEMORY action) {
-        int position = isValueInput ? 2 : whereResult;
         switch (action) {
             case CLEAR:
                 memory = 0;
@@ -214,13 +201,13 @@ public class Calculator {
                 whereResult = 2;
                 break;
             case SET:
-                memory = op[position];
+                memory = op[whereResult];
                 break;
             case PLUS:
-                memory += op[position];
+                memory += op[whereResult];
                 break;
             case MINUS:
-                memory -= op[position];
+                memory -= op[whereResult];
                 break;
         }
     }
@@ -231,7 +218,6 @@ public class Calculator {
         op[INPUT] = 0;
         whereResult = 0;
         lastOperation = OPERATION.NONE;
-        isValueInput = false;
         lastAction = NO_ACTION;
     }
 }
